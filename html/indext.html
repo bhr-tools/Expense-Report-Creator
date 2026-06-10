@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Générateur de note de frais automatique pour les associations et les clubs de l'ENSEEIHT">
+    <title>Expense Report Creator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="min-h-screen flex flex-col">
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3">
+
+    </div>
+
+    <div id="custom-modal" class="fixed inset-0 z-50 hidden">
+        <div class="bg-black/30 backdrop-blur-sm transition-opacity absolute inset-0" onclick="closeModal()"></div>
+        <div id="modal-content-wrapper" class="glass apple-shadow rounded-3xl p-8 max-w-sm w-full mx-4">
+            <div id="modal-content" class="relative z-10 transform scale-95 opacity-0 transition-all duration-300">
+            </div>
+        </div>
+    </div>
+
+    <nav id="navbar"
+        class="hidden flex justify-between items-center sticky top-0 z-40 px-6 py-4 border-b border-gray-200 glass">
+        <div class="flex items-center gap-3">
+            <div id="nav-logo"
+                class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+                N7
+            </div>
+            <span id="nav-title" class="font-semibold text-lg tracking-tight">Expense Report Creator</span>
+        </div>
+
+        <div id="menu-club" class="hidden flex items-center gap-6">
+            <button
+                class="text-sm font-medium text-gray-500 hover:text-gray-900 transition flex items-center gap-2 menu-btn"
+                data-target="view-frais">
+                <i class="ph ph-receipt text-lg"></i> Créer une NDF
+            </button>
+            <button
+                class="text-sm font-medium text-gray-500 hover:text-gray-900 transition flex items-center gap-2 menu-btn"
+                data-target="view-benef">
+                <i class="ph ph-users text-lg"></i> Bénéficiaires
+            </button>
+            <button id="nav-admin-btn"
+                class="hidden text-sm font-medium text-gray-500 hover:text-gray-900 transition items-center gap-2 menu-btn"
+                data-target="view-admin">
+                <i class="ph ph-buildings text-lg"></i> Gérer les clubs
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button
+                class="text-sm text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition flex items-center gap-2">
+                <i class="ph ph-key"></i> Mot de passe
+            </button>
+            <button
+                class="text-sm text-red-500 hover:bg-red-50 px-4 py-2 rounded-full transition flex items-center gap-2">
+                <i class="ph ph-sign-out"></i> Déconnexion
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex flex-col flex-grow justify-center items-center">
+        <div id="view-login" class="view-section active">
+            <div class="glass apple-shadow rounded-3xl p-10 text-center">
+                <div
+                    class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-6">
+                    N7
+                </div>
+                <h1 class="text-2xl font-bold mb-2">Expense Report Creator</h1>
+                <p class="text-gray-500 text-sm mb-8">Connectez-vous à votre espace association/club.</p>
+
+                <form id="login-form" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 ml-2 mb-1">Identifiant</label>
+                        <input type="text" id="login-id" class="apple-input" placeholder="ex: net7" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 ml-2 mb-1">Mot de passe</label>
+                        <input type="password" id="login-pass" class="apple-input" placeholder="••••••••" required>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" class="apple-btn-primary w-full shadow-md">Se connecter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-frais" class="view-section">
+        </div>
+
+        <div id="view-benef" class="view-section">
+        </div>
+
+        <div id="view-admin" class="view-section">
+        </div>
+    </main>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,91 @@
+body {
+  font-family: '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif;
+  color: #1d1d1f;
+  background-color: #f5f5f7;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px) ;
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.apple-shadow {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.03);
+}
+
+.apple-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #d2d2d7;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.apple-input:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+  background-color: #ffffff;
+}
+
+.apple-input:invalid:not(:placeholder-shown) {
+  border-color: #ef4444;
+}
+
+.apple-btn-primary {
+  background-color: #0071e3;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.apple-btn-primary:hover {
+  background-color: #005bb5;
+  transform: scale(0.98);
+}
+
+.apple-btn-secondary {
+  background-color: #e8e8ed;
+  color: #1d1d1f;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.apple-btn-secondary:hover {
+  background-color: #d2d2d7;
+}
+
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinners {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px }
+::-webkit-scrollbar-track { background-color: transparent; }
+::-webkit-scrollbar-thumb { background-color: #c1c1c1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background-color: #a8a8a8; }
+
+.view-section {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.view-section.active {
+  display: block;
+  opacity: 1;
+}
