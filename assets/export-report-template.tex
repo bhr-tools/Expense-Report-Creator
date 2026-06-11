@@ -24,8 +24,8 @@
 
     % Afficher les informations de l'association
     \textbf{\textcolor[RGB]{255,87,51}{\VAR{association_name}}}\\
-    \VAR{association_adress_1},\\
-    \VAR{association_adress_2}\\
+    \VAR{association_adress},\\
+    \VAR{association_postal} \VAR{association_city}\\
     \VAR{association_email}\\
 \end{minipage}
 \hfill
@@ -44,12 +44,11 @@
     % Afficher les informations du bénéficiaire
     \begin{flushright}
         \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire}}\\
-        \VAR{beneficiary_name}\\
-        \VAR{beneficiary_adress_1},\\
-        \VAR{beneficiary_adress_2}\\
-        \BLOCK{ if benficiary_phone }
+        \VAR{beneficiary_name} \VAR{beneficiary_surname}\\
+        \VAR{beneficiary_adress},\\
+        \VAR{beneficiary_postal} \VAR{beneficiary_city}\\
+        \VAR{beneficiary_email}\\
         \VAR{beneficiary_phone}\\
-        \BLOCK{ endif }
     \end{flushright}
 \end{minipage}
 
@@ -114,7 +113,7 @@
 % --- SIGNATURES ---
 \begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
-    \VAR{beneficiary_name}\\
+    \VAR{beneficiary_name} \VAR{beneficiary_surname}\\
     Fait à \hspace{2.5cm} le \\
 
     % Espace pour signature manuelle si besoin
@@ -123,7 +122,7 @@
 \hfill
 \begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature de la trésorerie}}\\
-    \VAR{treasurer}\\
+    \VAR{treasurer_name} \VAR{treasurer_surname}\\
     Fait à \VAR{signature_location} le \VAR{date} \\
 
     \vspace{0.2cm}

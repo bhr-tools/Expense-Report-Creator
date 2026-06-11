@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N7 - Trésorerie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!--
+    ===========================================================================
+    BLOC EXPLICATIF (À SUPPRIMER) : STYLES CUSTOM
+    Le design repose principalement sur TailwindCSS. Les styles ci-dessous 
+    servent uniquement aux effets spécifiques "Apple" (Glassmorphism, ombres 
+    douces) et à la modification native des inputs (masquer les flèches des 
+    champs numériques, gérer les inputs invalides).
+    ===========================================================================
+    -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .apple-shadow {
+            box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        .apple-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #d2d2d7;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .apple-input:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+            background-color: #ffffff;
+        }
+        
+        .apple-input:invalid:not(:placeholder-shown) {
+            border-color: #ef4444;
+        }
+
+        .apple-btn-primary {
+            background-color: #0071e3;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .apple-btn-primary:hover {
+            background-color: #005bb5;
+            transform: scale(0.98);
+        }
+
+        .apple-btn-secondary {
+            background-color: #e8e8ed;
+            color: #1d1d1f;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .apple-btn-secondary:hover {
+            background-color: #d2d2d7;
+        }
+
+        .no-spinners::-webkit-inner-spin-button, 
+        .no-spinners::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        .no-spinners {
+            -moz-appearance: textfield;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        .view-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+
+    <div id="custom-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        <div class="glass apple-shadow rounded-3xl p-8 max-w-sm w-full mx-4 relative z-10 transform scale-95 opacity-0 transition-all duration-300" id="modal-content-wrapper">
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!--
+    ===========================================================================
+    BLOC EXPLICATIF (À SUPPRIMER) : NAVIGATION
+    La barre de navigation est globale. Les boutons ont un data-target qui 
+    permet au script JS (fonction switchView) de savoir quelle section afficher 
+    et de mettre en surbrillance le bouton actif.
+    ===========================================================================
+    -->
+    <nav id="navbar" class="hidden glass sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md" id="nav-logo">
+                N7
+            </div>
+            <span class="font-semibold text-lg tracking-tight" id="nav-title">Trésorerie</span>
+        </div>
+        
+        <div id="menu-club" class="hidden flex items-center gap-6">
+            <button onclick="switchView('view-frais')" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition flex items-center gap-2 menu-btn" data-target="view-frais">
+                <i class="ph ph-receipt text-lg"></i> Créer une NDF
+            </button>
+            <button onclick="switchView('view-benef')" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition flex items-center gap-2 menu-btn" data-target="view-benef">
+                <i class="ph ph-users text-lg"></i> Bénéficiaires
+            </button>
+            <button id="nav-admin-btn" onclick="switchView('view-admin')" class="hidden text-sm font-medium text-gray-500 hover:text-gray-900 transition items-center gap-2 menu-btn" data-target="view-admin">
+                <i class="ph ph-buildings text-lg"></i> Gérer les clubs
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openChangePasswordModal()" class="text-sm text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition flex items-center gap-2">
+                <i class="ph ph-key"></i> Mot de passe
+            </button>
+            <button onclick="logout()" class="text-sm text-red-500 hover:bg-red-50 px-4 py-2 rounded-full transition flex items-center gap-2">
+                <i class="ph ph-sign-out"></i> Déconnexion
+            </button>
+        </div>
+    </nav>
+
+    <!--
+    ===========================================================================
+    BLOC EXPLICATIF (À SUPPRIMER) : VUES DE L'APPLICATION
+    L'application fonctionne en SPA (Single Page Application). Toutes les vues 
+    sont chargées ici. Seule la vue contenant la classe 'active' est affichée.
+    - view-login : Connexion
+    - view-admin : Gestion des clubs (AE)
+    - view-benef : Gestion des IBAN
+    - view-frais : Formulaire principal
+    ===========================================================================
+    -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <div id="view-login" class="view-section active w-full max-w-md">
+            <div class="glass apple-shadow rounded-3xl p-10 text-center">
+                <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-6">
+                    N7
+                </div>
+                <h1 class="text-2xl font-bold mb-2">Trésorerie</h1>
+                <p class="text-gray-500 text-sm mb-8">Connectez-vous à votre espace club ou admin.</p>
+                
+                <form id="login-form" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 ml-2 mb-1">Identifiant</label>
+                        <input type="text" id="login-id" class="apple-input" placeholder="ex: club_photo ou admin" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 ml-2 mb-1">Mot de passe</label>
+                        <input type="password" id="login-pass" class="apple-input" placeholder="••••••••" required>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" class="apple-btn-primary w-full shadow-md">Se connecter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-admin" class="view-section w-full max-w-6xl self-start mt-8">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold">Tableau de bord AE</h1>
+                <button onclick="openCreateClubModal()" class="apple-btn-primary flex items-center gap-2 shadow-sm">
+                    <i class="ph ph-plus-circle text-xl"></i> Nouveau Club
+                </button>
+            </div>
+
+            <div class="glass apple-shadow rounded-3xl overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 border-b border-gray-200">
+                            <th class="p-4 text-sm font-semibold text-gray-500">Club</th>
+                            <th class="p-4 text-sm font-semibold text-gray-500">Identifiant</th>
+                            <th class="p-4 text-sm font-semibold text-gray-500">Dernière connexion</th>
+                            <th class="p-4 text-sm font-semibold text-gray-500 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100" id="admin-clubs-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-benef" class="view-section w-full max-w-6xl self-start mt-8">
+            <h1 class="text-3xl font-bold mb-8">Carnet de Bénéficiaires</h1>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <div class="glass apple-shadow rounded-3xl p-6">
+                        <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <i class="ph ph-user-plus text-blue-500"></i> Ajouter un bénéficiaire
+                        </h2>
+                        <form id="form-add-benef" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><input type="text" id="b-prenom" class="apple-input bg-gray-50/50" placeholder="Prénom" required></div>
+                                <div><input type="text" id="b-nom" class="apple-input bg-gray-50/50" placeholder="Nom" required></div>
+                            </div>
+                            <div><input type="text" id="b-adresse" class="apple-input bg-gray-50/50" placeholder="Adresse complète" required></div>
+                            <div><input type="email" id="b-mail" class="apple-input bg-gray-50/50" placeholder="Adresse email" required></div>
+                            <div><input type="tel" id="b-tel" class="apple-input bg-gray-50/50" placeholder="Téléphone"></div>
+                            <div>
+                                <input type="text" id="b-iban" class="apple-input bg-gray-50/50 font-mono text-sm tracking-widest uppercase" placeholder="FR76 1234..." required>
+                                <p class="text-[10px] text-gray-400 mt-1 ml-1">Formatage automatique</p>
+                            </div>
+                            <button type="submit" class="apple-btn-primary w-full mt-2 shadow-sm">Enregistrer</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <div class="glass apple-shadow rounded-3xl p-6 h-full">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="pb-3 text-sm font-semibold text-gray-500">Identité</th>
+                                        <th class="pb-3 text-sm font-semibold text-gray-500">Contact</th>
+                                        <th class="pb-3 text-sm font-semibold text-gray-500">IBAN</th>
+                                        <th class="pb-3 text-sm font-semibold text-gray-500"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100" id="beneficiaires-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-frais" class="view-section w-full max-w-6xl self-start mt-8 pb-20">
+            <h1 class="text-3xl font-bold mb-8">Nouvelle Note de Frais</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass apple-shadow rounded-3xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="ph ph-buildings text-blue-500"></i> Informations Asso
+                        </h2>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">Requis</span>
+                    </div>
+                    <form id="settings-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Nom de l'association</label>
+                                <input type="text" id="set-nom" class="apple-input bg-gray-50/50" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Année de mandat (AAAA-AAAA)</label>
+                                <input type="text" id="set-mandat" class="apple-input bg-gray-50/50" placeholder="ex: 2025-2026" pattern="\d{4}-\d{4}" title="Le format doit être AAAA-AAAA" required oninput="updateNdfPreview()">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Trésorier(e)</label>
+                                <input type="text" id="set-tresorier" class="apple-input bg-gray-50/50" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Email contact</label>
+                                <input type="email" id="set-email" class="apple-input bg-gray-50/50" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Signature (Requis)</label>
+                            <input type="file" id="set-signature" accept="image/png, image/jpeg" class="apple-input bg-gray-50/50 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="glass apple-shadow rounded-3xl p-6 flex-grow">
+                        <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <i class="ph ph-hand-coins text-green-500"></i> Remboursement à
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Bénéficiaire enregistré</label>
+                                <select id="select-beneficiaire" class="apple-input bg-gray-50/50" onchange="updateSelectedBeneficiary()">
+                                    <option value="">-- Sélectionner un bénéficiaire --</option>
+                                </select>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 min-h-[80px]">
+                                <div id="benef-preview" class="text-sm text-gray-500 text-center italic mt-2">
+                                    Sélectionnez un bénéficiaire pour voir ses coordonnées bancaires.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass apple-shadow rounded-3xl p-6">
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Numéro de la Note de Frais</label>
+                        <input type="number" id="ndf-numero" class="apple-input border-gray-300 font-bold" placeholder="1, 2, 3..." min="1" step="1" required oninput="updateNdfPreview()">
+                        <p class="text-sm text-gray-500 mt-2 ml-1" id="ndf-preview">Aperçu : NDF-XXXX-XXX</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass apple-shadow rounded-3xl p-6 mb-6">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="ph ph-list-numbers text-purple-500"></i> Détail des Dépenses
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-1">
+                            💡 Vous pouvez directement <strong>copier/coller depuis Excel</strong> n'importe où dans ce tableau.
+                        </p>
+                    </div>
+                    <button onclick="addExpenseRow()" class="apple-btn-secondary text-sm flex items-center gap-1">
+                        <i class="ph ph-plus"></i> Ligne
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                    <table class="w-full text-left" id="expenses-table">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                <th class="p-3 w-24">Quantité</th>
+                                <th class="p-3">Libellé</th>
+                                <th class="p-3 w-32">Prix unitaire (€)</th>
+                                <th class="p-3 w-32 bg-gray-100/50">Prix total (€)</th>
+                                <th class="p-3 w-12 text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-body" class="divide-y divide-gray-100">
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gray-50 font-bold border-t-2 border-gray-200">
+                                <td colspan="3" class="p-4 text-right text-gray-600 uppercase text-xs tracking-wider">Grand Total</td>
+                                <td class="p-4 text-lg text-blue-600" id="grand-total">0.00 €</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!--
+                ===========================================================================
+                BLOC EXPLICATIF (À SUPPRIMER) : ZONE UPLOAD
+                Le conteneur div entier agit comme un bouton. Le onclick déclenche
+                le click sur l'input hidden. La fonction onchange de l'input met à 
+                jour la liste visuelle des fichiers (updateFileList).
+                ===========================================================================
+                -->
+                <div onclick="document.getElementById('file-upload').click()" class="glass apple-shadow rounded-3xl p-6 border-dashed border-2 border-gray-300 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/50 transition">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-gray-400">
+                        <i class="ph ph-upload-simple text-2xl"></i>
+                    </div>
+                    <p class="font-medium text-gray-700">Glissez vos justificatifs ici</p>
+                    <p class="text-sm text-gray-500 mt-1">ou <span class="text-blue-600 font-medium hover:underline">parcourez vos fichiers</span></p>
+                    <p class="text-xs text-gray-400 mt-2">PDF, PNG, JPG (Global pour la note)</p>
+                    
+                    <input type="file" multiple class="hidden" id="file-upload" onchange="updateFileList(this)">
+                    <div id="file-list-preview" class="mt-4 w-full text-left text-sm text-gray-600 max-h-24 overflow-y-auto hidden bg-white rounded-xl p-3 border border-gray-100 shadow-inner">
+                    </div>
+                </div>
+
+                <div class="glass apple-shadow rounded-3xl p-6 flex flex-col justify-center gap-4">
+                    <button onclick="generateNDF('pdf')" class="apple-btn-primary w-full shadow-md flex justify-center items-center gap-2 py-4 text-lg">
+                        <i class="ph ph-file-pdf"></i> Télécharger en PDF
+                    </button>
+                    <button onclick="generateNDF('latex')" class="apple-btn-secondary w-full flex justify-center items-center gap-2">
+                        <i class="ph ph-code"></i> Source LaTeX (Avancé)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        let state = {
+            currentUser: null,
+            beneficiaires: [],
+            clubs: [],
+            settings: {
+                nom: '',
+                mandat: '',
+                tresorier: '',
+                email: ''
+            },
+            selectedReceipts: []
+        };
+
+        /*
+        ===========================================================================
+        COMPOSANTS UI
+        Fonctions utilitaires pour afficher des messages temporaires (Toast)
+        ou des fenêtres par-dessus le contenu (Modales).
+        ===========================================================================
+        */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-white border-l-4 border-green-500 text-gray-800',
+                error: 'bg-red-50 text-red-800 border border-red-200',
+                info: 'bg-white border-l-4 border-blue-500 text-gray-800'
+            };
+
+            const icons = {
+                success: '<i class="ph ph-check-circle text-green-500 text-xl"></i>',
+                error: '<i class="ph ph-warning-circle text-red-500 text-xl"></i>',
+                info: '<i class="ph ph-info text-blue-500 text-xl"></i>'
+            };
+
+            toast.className = `apple-shadow rounded-xl p-4 flex items-center gap-3 transform transition-all duration-300 translate-y-10 opacity-0 ${colors[type]}`;
+            toast.innerHTML = `${icons[type]} <span class="font-medium text-sm">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-10');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openModal(contentHtml) {
+            const modal = document.getElementById('custom-modal');
+            const wrapper = document.getElementById('modal-content-wrapper');
+            document.getElementById('modal-content').innerHTML = contentHtml;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                wrapper.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            const wrapper = document.getElementById('modal-content-wrapper');
+            
+            wrapper.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Changement de vue asynchrone pour charger les données réelles au moment de l'affichage
+        async function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(viewId).classList.add('active');
+
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                if (btn.dataset.target === viewId) {
+                    btn.classList.add('text-blue-600', 'font-bold');
+                    btn.classList.remove('text-gray-500', 'font-medium');
+                } else {
+                    btn.classList.remove('text-blue-600', 'font-bold');
+                    btn.classList.add('text-gray-500', 'font-medium');
+                }
+            });
+
+            // Chargement dynamique selon la vue ciblée
+            if (viewId === 'view-benef') {
+                await fetchBeneficiaires();
+                renderBeneficiaires();
+            }
+            if (viewId === 'view-frais') {
+                await fetchBeneficiaires();
+                updateBeneficiaireSelect();
+                await fetchSettings();
+                loadSettings();
+                updateNdfPreview();
+            }
+            if (viewId === 'view-admin') {
+                await fetchClubs();
+                renderAdmin();
+            }
+        }
+
+        // =============================================================================
+        // LOGIQUE DE CONNEXION ET RESTAURATION DE SESSION (JWT)
+        // =============================================================================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value.trim();
+            const password = document.getElementById('login-pass').value;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ club_id: id, password: password })
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || "Identifiant ou mot de passe incorrect");
+                }
+                
+                const data = await response.json();
+                
+                // Sauvegarde du jeton JWT et des infos utilisateur
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('club_id', data.club_id);
+                localStorage.setItem('club_nom', data.nom);
+                
+                state.currentUser = data.club_id;
+                
+                setupUIForUser(data.club_id, data.nom);
+                
+            } catch (error) {
+                console.error("Erreur de connexion :", error);
+                showToast(`❌ Connexion échouée : ${error.message}`, 'error');
+            }
+        });
+
+        function setupUIForUser(clubId, clubNom) {
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('menu-club').classList.remove('hidden');
+            
+            if (clubId === 'admin') {
+                document.getElementById('nav-admin-btn').classList.remove('hidden');
+                document.getElementById('nav-admin-btn').classList.add('flex');
+                
+                document.getElementById('nav-logo').className = 'w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-md';
+                document.getElementById('nav-title').textContent = 'Admin AE';
+                showToast('Connecté en tant qu\'Admin', 'success');
+                switchView('view-admin');
+            } else {
+                document.getElementById('nav-admin-btn').classList.add('hidden');
+                document.getElementById('nav-admin-btn').classList.remove('flex');
+
+                document.getElementById('nav-logo').className = 'w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md';
+                document.getElementById('nav-title').textContent = `Club ${clubNom}`;
+                showToast(`Connecté : ${clubNom}`, 'success');
+                switchView('view-frais');
+            }
+        }
+
+        function logout() {
+            state.currentUser = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('club_id');
+            localStorage.removeItem('club_nom');
+            
+            document.getElementById('navbar').classList.add('hidden');
+            document.getElementById('login-id').value = '';
+            document.getElementById('login-pass').value = '';
+            showToast('Déconnexion réussie', 'info');
+            switchView('view-login');
+        }
+
+        async function restoreSession() {
+            const token = localStorage.getItem('token');
+            const clubId = localStorage.getItem('club_id');
+            const clubNom = localStorage.getItem('club_nom');
+            
+            if (token && clubId) {
+                state.currentUser = clubId;
+                try {
+                    // Test rapide de la validité du token
+                    const response = await fetch('http://localhost:8000/api/settings', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error("Token expiré ou invalide");
+                    
+                    setupUIForUser(clubId, clubNom);
+                } catch (e) {
+                    console.warn("Session expirée, déconnexion...");
+                    logout();
+                }
+            } else {
+                switchView('view-login');
+            }
+        }
+
+        // =============================================================================
+        // LOGIQUE BACKEND : APPELS API ET SYNC (CRUD)
+        // =============================================================================
+        
+        // --- Paramètres (Settings) ---
+        async function fetchSettings() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:8000/api/settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Erreur de chargement des paramètres");
+                state.settings = await response.json();
+            } catch (error) {
+                showToast("Erreur de récupération des paramètres", "error");
+            }
+        }
+
+        async function saveSettings() {
+            const token = localStorage.getItem('token');
+            const data = {
+                nom: document.getElementById('set-nom').value,
+                mandat: document.getElementById('set-mandat').value,
+                tresorier: document.getElementById('set-tresorier').value,
+                email: document.getElementById('set-email').value
+            };
+            try {
+                const response = await fetch('http://localhost:8000/api/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error("Erreur lors de la mise à jour");
+                state.settings = data;
+            } catch (error) {
+                console.error("Erreur de sauvegarde des settings :", error);
+                showToast("Erreur lors de la sauvegarde automatique des paramètres", "error");
+            }
+        }
+
+        // --- Bénéficiaires ---
+        async function fetchBeneficiaires() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:8000/api/beneficiaires', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Erreur de chargement des bénéficiaires");
+                state.beneficiaires = await response.json();
+            } catch (error) {
+                console.error("Erreur fetchBeneficiaires :", error);
+            }
+        }
+
+        // --- Clubs (Admin) ---
+        async function fetchClubs() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:8000/api/admin/clubs', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("Erreur de chargement des clubs");
+                state.clubs = await response.json();
+            } catch (error) {
+                console.error("Erreur fetchClubs :", error);
+            }
+        }
+
+        // =============================================================================
+        // LOGIQUE ADMIN (MODALES ET ACTIONS)
+        // =============================================================================
+        function renderAdmin() {
+            const tbody = document.getElementById('admin-clubs-list');
+            tbody.innerHTML = '';
+            state.clubs.forEach(club => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                                    ${club.nom.charAt(0)}
+                                </div>
+                                <span class="font-medium">${club.nom}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm text-gray-500 font-mono">${club.id}</td>
+                        <td class="p-4 text-sm text-gray-500">${club.lastLogin}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="confirmPasswordReset('${club.id}', '${club.nom}')" class="text-orange-500 hover:bg-orange-50 p-2 rounded-lg transition" title="Régénérer MDP">
+                                <i class="ph ph-key text-lg"></i>
+                            </button>
+                            <button onclick="deleteClub('${club.id}', '${club.nom}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Supprimer">
+                                <i class="ph ph-trash text-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openChangePasswordModal() {
+            const content = `
+                <div class="text-left">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="ph ph-key text-orange-500"></i> Changer de mot de passe
+                    </h3>
+                    <form id="form-change-password" class="space-y-4" onsubmit="executeChangePassword(event)">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Ancien mot de passe</label>
+                            <input type="password" id="chg-old-pass" class="apple-input bg-gray-50/50" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Nouveau mot de passe</label>
+                            <input type="password" id="chg-new-pass" class="apple-input bg-gray-50/50" required>
+                        </div>
+                        <div class="flex gap-3 justify-end pt-4">
+                            <button type="button" onclick="closeModal()" class="apple-btn-secondary">Annuler</button>
+                            <button type="submit" class="apple-btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            openModal(content);
+        }
+
+        async function executeChangePassword(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            const old_password = document.getElementById('chg-old-pass').value;
+            const new_password = document.getElementById('chg-new-pass').value;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ old_password, new_password })
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Erreur lors du changement de mot de passe");
+                }
+                
+                showToast("Mot de passe changé avec succès", 'success');
+                closeModal();
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        function openCreateClubModal() {
+            const content = `
+                <div class="text-left">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="ph ph-plus-circle text-blue-500"></i> Créer un Club
+                    </h3>
+                    <form id="form-create-club" class="space-y-4" onsubmit="executeCreateClub(event)">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Identifiant unique (club_id)</label>
+                            <input type="text" id="new-club-id" class="apple-input bg-gray-50/50" placeholder="ex: club_photo" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Nom du club</label>
+                            <input type="text" id="new-club-nom" class="apple-input bg-gray-50/50" placeholder="ex: Club Photo N7" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Mot de passe temporaire</label>
+                            <input type="password" id="new-club-pass" class="apple-input bg-gray-50/50" placeholder="••••••••" required>
+                        </div>
+                        <div class="flex gap-3 justify-end pt-4">
+                            <button type="button" onclick="closeModal()" class="apple-btn-secondary">Annuler</button>
+                            <button type="submit" class="apple-btn-primary">Créer</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            openModal(content);
+        }
+
+        async function executeCreateClub(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            const club_id = document.getElementById('new-club-id').value.toLowerCase().trim();
+            const nom = document.getElementById('new-club-nom').value.trim();
+            const password = document.getElementById('new-club-pass').value;
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/admin/clubs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ club_id, nom, password })
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || "Erreur de création");
+                }
+                
+                showToast(`Club '${nom}' créé avec succès`, 'success');
+                closeModal();
+                await fetchClubs();
+                renderAdmin();
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        function confirmPasswordReset(clubId, clubName) {
+            const content = `
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ph ph-warning text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Régénérer le mot de passe ?</h3>
+                    <p class="text-sm text-gray-500 mb-6">Êtes-vous sûr de vouloir générer un nouveau mot de passe pour <strong>${clubName}</strong> ? L'ancien ne fonctionnera plus.</p>
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="closeModal()" class="apple-btn-secondary">Annuler</button>
+                        <button onclick="executePasswordReset('${clubId}', '${clubName}')" class="apple-btn-primary !bg-orange-500 hover:!bg-orange-600">Confirmer</button>
+                    </div>
+                </div>
+            `;
+            openModal(content);
+        }
+
+        async function executePasswordReset(clubId, clubName) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:8000/api/admin/clubs/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ club_id: clubId })
+                });
+                
+                if (!response.ok) throw new Error("Erreur lors de la réinitialisation côté serveur");
+                
+                const resData = await response.json();
+                const newPass = resData.new_password;
+                
+                const content = `
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="ph ph-check-circle text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Nouveau mot de passe</h3>
+                        <p class="text-sm text-gray-500 mb-4">Voici le nouveau mot de passe pour <strong>${clubName}</strong>. Copiez-le soigneusement et transmettez-le au club.</p>
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                            <span class="font-mono text-2xl font-bold text-gray-800 tracking-wider">${newPass}</span>
+                        </div>
+                        <button onclick="closeModal()" class="apple-btn-primary w-full">Fermer</button>
+                    </div>
+                `;
+                openModal(content);
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteClub(clubId, clubName) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement le club '${clubName}' ainsi que toutes ses données ?`)) {
+                return;
+            }
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`http://localhost:8000/api/admin/clubs/${clubId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || "Erreur lors de la suppression");
+                }
+                
+                showToast(`Club '${clubName}' supprimé avec succès`, 'info');
+                await fetchClubs();
+                renderAdmin();
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        // =============================================================================
+        // LOGIQUE BÉNÉFICIAIRES (CRUD)
+        // =============================================================================
+        function renderBeneficiaires() {
+            const tbody = document.getElementById('beneficiaires-list');
+            tbody.innerHTML = '';
+            state.beneficiaires.forEach(b => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="py-4">
+                            <div class="font-medium">${b.prenom} ${b.nom}</div>
+                            <div class="text-xs text-gray-500">${b.adresse}</div>
+                        </td>
+                        <td class="py-4">
+                            <div class="text-sm">${b.mail}</div>
+                            <div class="text-xs text-gray-500">${b.tel || '-'}</div>
+                        </td>
+                        <td class="py-4 font-mono text-xs text-gray-600">${b.iban}</td>
+                        <td class="py-4 text-right">
+                            <button onclick="deleteBeneficiaire(${b.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('b-iban').addEventListener('input', function(e) {
+            let val = this.value.replace(/[^\w]/g, '').toUpperCase();
+            this.value = val.replace(/(.{4})/g, '$1 ').trim();
+        });
+
+        document.getElementById('form-add-benef').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            const newB = {
+                prenom: document.getElementById('b-prenom').value.trim(),
+                nom: document.getElementById('b-nom').value.trim(),
+                adresse: document.getElementById('b-adresse').value.trim(),
+                mail: document.getElementById('b-mail').value.trim(),
+                tel: document.getElementById('b-tel').value.trim(),
+                iban: document.getElementById('b-iban').value.trim()
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/api/beneficiaires', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(newB)
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Erreur serveur lors de l'enregistrement");
+                }
+                
+                showToast('Bénéficiaire ajouté avec succès', 'success');
+                e.target.reset();
+                await fetchBeneficiaires();
+                renderBeneficiaires();
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        });
+
+        async function deleteBeneficiaire(id) {
+            if (!confirm("Voulez-vous vraiment supprimer ce bénéficiaire ?")) return;
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`http://localhost:8000/api/beneficiaires/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Erreur serveur lors de la suppression");
+                }
+                
+                showToast('Bénéficiaire supprimé', 'info');
+                await fetchBeneficiaires();
+                renderBeneficiaires();
+            } catch (error) {
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        // =============================================================================
+        // LOGIQUE NOTE DE FRAIS ET SAUVEGARDE PARAMÈTRES
+        // =============================================================================
+        function loadSettings() {
+            document.getElementById('set-nom').value = state.settings.nom || '';
+            document.getElementById('set-mandat').value = state.settings.mandat || '2025-2026';
+            document.getElementById('set-tresorier').value = state.settings.tresorier || '';
+            document.getElementById('set-email').value = state.settings.email || '';
+        }
+
+        // Sauvegarder automatiquement quand les champs perdent le focus ou changent
+        document.getElementById('settings-form').addEventListener('change', () => {
+            saveSettings();
+        });
+
+        function updateNdfPreview() {
+            const mandat = document.getElementById('set-mandat').value;
+            const num = document.getElementById('ndf-numero').value;
+            const preview = document.getElementById('ndf-preview');
+            
+            if (mandat && mandat.match(/^\d{4}-\d{4}$/) && num) {
+                const year = mandat.split('-')[1];
+                const paddedNum = String(num).padStart(3, '0');
+                preview.innerHTML = `Aperçu : <strong class="text-blue-600">NDF-${year}-${paddedNum}</strong>`;
+            } else {
+                preview.innerHTML = `Aperçu : En attente d'un format de mandat et numéro valide...`;
+            }
+        }
+
+        function updateBeneficiaireSelect() {
+            const select = document.getElementById('select-beneficiaire');
+            select.innerHTML = '<option value="">-- Sélectionner un bénéficiaire --</option>';
+            state.beneficiaires.forEach(b => {
+                select.innerHTML += `<option value="${b.id}">${b.prenom} ${b.nom}</option>`;
+            });
+        }
+
+        function updateSelectedBeneficiary() {
+            const id = document.getElementById('select-beneficiaire').value;
+            const preview = document.getElementById('benef-preview');
+            
+            if (!id) {
+                preview.innerHTML = `<span class="italic text-gray-500">Sélectionnez un bénéficiaire pour voir ses coordonnées bancaires.</span>`;
+                return;
+            }
+
+            const b = state.beneficiaires.find(x => x.id == id);
+            if (!b) return;
+            
+            preview.innerHTML = `
+                <div class="font-semibold text-gray-800">${b.prenom} ${b.nom}</div>
+                <div class="text-xs text-gray-600 mt-1">${b.adresse}</div>
+                <div class="mt-3 text-xs uppercase tracking-widest text-gray-500">IBAN</div>
+                <div class="font-mono text-sm bg-white p-2 rounded border border-gray-200 mt-1 text-gray-800">${b.iban}</div>
+            `;
+        }
+
+        // =============================================================================
+        // LOGIQUE TABLEAU EXCEL (COPIER / COLLER)
+        // =============================================================================
+        function addExpenseRow(qty = 1, label = '', price = 0) {
+            const tbody = document.getElementById('expenses-body');
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50/30 transition expense-row group";
+            
+            if(typeof price === 'string') {
+                price = price.replace(/[€\s]/g, '').replace(',', '.');
+            }
+            price = parseFloat(price) || 0;
+            qty = parseInt(qty) || 1;
+
+            tr.innerHTML = `
+                <td class="p-2 border-r border-gray-100">
+                    <input type="number" min="1" step="1" value="${qty}" class="w-full p-2 bg-transparent outline-none text-center rounded focus:bg-white focus:ring-2 focus:ring-blue-100 expense-qty" oninput="calcTotals()">
+                </td>
+                <td class="p-2 border-r border-gray-100">
+                    <input type="text" value="${label}" placeholder="Ex: Achat fournitures..." class="w-full p-2 bg-transparent outline-none rounded focus:bg-white focus:ring-2 focus:ring-blue-100">
+                </td>
+                <td class="p-2 border-r border-gray-100">
+                    <input type="number" min="0" step="0.01" value="${price.toFixed(2)}" class="w-full p-2 bg-transparent outline-none text-right rounded focus:bg-white focus:ring-2 focus:ring-blue-100 no-spinners expense-price" oninput="calcTotals()">
+                </td>
+                <td class="p-2 bg-gray-50/50 text-right font-medium text-gray-700 expense-row-total border-r border-gray-100">
+                    ${(qty * price).toFixed(2)} €
+                </td>
+                <td class="p-2 text-center">
+                    <button onclick="this.closest('tr').remove(); calcTotals();" class="text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                        <i class="ph ph-x-circle text-xl"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            calcTotals();
+        }
+
+        function calcTotals() {
+            let globalTotal = 0;
+            document.querySelectorAll('.expense-row').forEach(row => {
+                const qty = parseInt(row.querySelector('.expense-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.expense-price').value) || 0;
+                const rowTotal = qty * price;
+                row.querySelector('.expense-row-total').textContent = rowTotal.toFixed(2) + ' €';
+                globalTotal += rowTotal;
+            });
+            document.getElementById('grand-total').textContent = globalTotal.toFixed(2) + ' €';
+        }
+
+        document.getElementById('expenses-table').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const rows = text.split(/\r?\n/);
+            
+            let pastedCount = 0;
+            rows.forEach(row => {
+                if (!row.trim()) return;
+                const cols = row.split('\t');
+                
+                if (cols.length >= 3) {
+                    addExpenseRow(cols[0], cols[1], cols[2]);
+                    pastedCount++;
+                } else if (cols.length === 2) {
+                    addExpenseRow(1, cols[0], cols[1]);
+                    pastedCount++;
+                }
+            });
+
+            if (pastedCount > 0) {
+                showToast(`${pastedCount} ligne(s) importée(s) !`, 'success');
+            }
+        });
+
+        // =============================================================================
+        // GESTION DES FICHIERS & ENVOI FORMULAIRE NDF (PDF/LATEX)
+        // =============================================================================
+        function updateFileList(inputElement) {
+            const previewContainer = document.getElementById('file-list-preview');
+            previewContainer.innerHTML = '';
+            
+            if (inputElement.files && inputElement.files.length > 0) {
+                previewContainer.classList.remove('hidden');
+                Array.from(inputElement.files).forEach(file => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-2 mb-1 last:mb-0 truncate';
+                    row.innerHTML = `<i class="ph ph-file-text text-gray-400"></i> <span>${file.name}</span>`;
+                    previewContainer.appendChild(row);
+                });
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        async function generateNDF(format) {
+            const num = document.getElementById('ndf-numero').value;
+            const mandat = document.getElementById('set-mandat').value;
+            const benefId = document.getElementById('select-beneficiaire').value;
+            const formValid = document.getElementById('settings-form').checkValidity();
+            const signatureFile = document.getElementById('set-signature').files[0];
+            const token = localStorage.getItem('token');
+
+            if (!formValid) {
+                showToast('Veuillez remplir toutes les informations de l\'association avec le bon format.', 'error');
+                return;
+            }
+            if (!signatureFile) {
+                showToast('La signature est requise pour générer la note de frais.', 'error');
+                return;
+            }
+            if (!benefId) {
+                showToast('Veuillez sélectionner un bénéficiaire.', 'error');
+                return;
+            }
+            if (!num || !mandat.match(/^\d{4}-\d{4}$/)) {
+                showToast('Format de mandat ou numéro NDF invalide.', 'error');
+                return;
+            }
+
+            const totalAmountStr = document.getElementById('grand-total').textContent;
+            const totalAmount = parseFloat(totalAmountStr) || 0;
+            
+            if (totalAmount === 0) {
+                showToast('Veuillez ajouter au moins une dépense valide.', 'error');
+                return;
+            }
+
+            const year = mandat.split('-')[1];
+            const paddedNum = String(num).padStart(3, '0');
+            const finalFileName = `NDF-${year}-${paddedNum}`;
+
+            showToast(`Envoi des données... Création du ${format.toUpperCase()} en cours.`, 'info');
+            
+            // 1. Récupération des données du bénéficiaire
+            const benefObj = state.beneficiaires.find(x => x.id == benefId);
+
+            // 2. Extraction des lignes de frais
+            const items = [];
+            document.querySelectorAll('.expense-row').forEach(row => {
+                const qty = parseInt(row.querySelector('.expense-qty').value) || 0;
+                const ref = row.querySelector('input[type="text"]').value || "Sans libellé";
+                const price = parseFloat(row.querySelector('.expense-price').value) || 0;
+                if (qty > 0) {
+                    items.push({
+                        quantity: qty,
+                        reference: ref,
+                        unit_price: price,
+                        total_price: qty * price
+                    });
+                }
+            });
+
+            // 3. Construction de l'objet JSON (Identique au modèle Pydantic du Backend)
+            const ndfData = {
+                association_name: document.getElementById('set-nom').value,
+                association_email: document.getElementById('set-email').value,
+                mandate: mandat,
+                treasurer: document.getElementById('set-tresorier').value,
+                signature_location: "Toulouse",
+                beneficiary_name: `${benefObj.prenom} ${benefObj.nom}`,
+                beneficiary_adress_1: benefObj.adresse,
+                beneficiary_adress_2: "",
+                beneficiary_phone: benefObj.tel || "",
+                beneficiary_iban: benefObj.iban,
+                ER_number: paddedNum,
+                refund_mod: "Virement bancaire",
+                attachment_list: "Voir justificatifs joints",
+                items: items,
+                final_price: totalAmount
+            };
+
+            // 4. Emballage dans un FormData (pour envoyer le JSON et les Fichiers en même temps)
+            const formData = new FormData();
+            formData.append('data_json', JSON.stringify(ndfData));
+            formData.append('format', format);
+            formData.append('signature', signatureFile);
+
+            // Ajout des justificatifs multiples
+            const receiptsFiles = document.getElementById('file-upload').files;
+            for (let i = 0; i < receiptsFiles.length; i++) {
+                formData.append('receipts', receiptsFiles[i]);
+            }
+
+            // 5. Envoi au serveur FastAPI
+            try {
+                const response = await fetch('http://localhost:8000/generate-ndf', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || "Erreur lors de la génération côté serveur");
+                }
+
+                // 6. Réception du fichier et déclenchement du téléchargement
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+                a.download = `${finalFileName}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Nettoyage
+                window.URL.revokeObjectURL(downloadUrl);
+                a.remove();
+
+                showToast(`✅ ${finalFileName}.${format} généré avec succès !`, 'success');
+
+            } catch (error) {
+                console.error("Erreur API :", error);
+                showToast(`❌ Échec : ${error.message}`, 'error');
+            }
+        }
+
+        // =============================================================================
+        // INITIALISATION AU CHARGEMENT DE LA PAGE
+        // =============================================================================
+        addExpenseRow();
+        restoreSession();
+
+    </script>
+</body>
+</html>

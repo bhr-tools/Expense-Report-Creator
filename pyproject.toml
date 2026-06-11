@@ -3,7 +3,7 @@ name = "expense-report-creator"
 version = "1.0.0"
 description = "Créateur de notes de frais pour trésorier d'association."
 authors = [
-    {name = "Ben",email = "jarvis.edith85@gmail.com"}
+    {name = "Ben",email = "contact@bhr-sys.com"}
 ]
 readme = "README.md"
 
