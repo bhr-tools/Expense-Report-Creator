@@ -24,15 +24,15 @@
 
     % Afficher les informations de l'association
     \textbf{\textcolor[RGB]{255,87,51}{\VAR{association_name}}}\\
-    \VAR{association_adress},\\
-    \VAR{association_postal} \VAR{association_city}\\
+    \VAR{association_address},\\
+    \VAR{association_postal_code} \VAR{association_city}\\
     \VAR{association_email}\\
 \end{minipage}
 \hfill
 \begin{minipage}[t]{.55\linewidth}
     \hrulefill
     \begin{center}
-        \Large{\textbf{Note de frais \no \VAR{ER_number}} : \VAR{mandate}-\VAR{ER_number}}
+        \Large{\textbf{Note de frais \no \VAR{er_number}} : \VAR{mandate}-\VAR{er_number}}
 
         \vspace{0.2cm}
         \normalsize{Faite le \VAR{date}}
@@ -44,9 +44,9 @@
     % Afficher les informations du bénéficiaire
     \begin{flushright}
         \textbf{\textcolor[RGB]{255,87,51}{Bénéficiaire}}\\
-        \VAR{beneficiary_name} \VAR{beneficiary_surname}\\
-        \VAR{beneficiary_adress},\\
-        \VAR{beneficiary_postal} \VAR{beneficiary_city}\\
+        \VAR{beneficiary_first_name} \VAR{beneficiary_last_name}\\
+        \VAR{beneficiary_address},\\
+        \VAR{beneficiary_postal_code} \VAR{beneficiary_city}\\
         \VAR{beneficiary_email}\\
         \VAR{beneficiary_phone}\\
     \end{flushright}
@@ -113,7 +113,7 @@
 % --- SIGNATURES ---
 \begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature du bénéficiaire}}\\
-    \VAR{beneficiary_name} \VAR{beneficiary_surname}\\
+    \VAR{beneficiary_first_name} \VAR{beneficiary_last_name}\\
     Fait à \hspace{2.5cm} le \\
 
     % Espace pour signature manuelle si besoin
@@ -122,7 +122,7 @@
 \hfill
 \begin{minipage}[t]{0.45\linewidth}
     \textbf{\textcolor[RGB]{255,87,51}{Signature de la trésorerie}}\\
-    \VAR{treasurer_name} \VAR{treasurer_surname}\\
+    \VAR{treasurer_first_name} \VAR{treasurer_last_name}\\
     Fait à \VAR{signature_location} le \VAR{date} \\
 
     \vspace{0.2cm}
@@ -136,7 +136,7 @@
 \vspace{1cm}
 
 \underline{Demande de remboursement :}
-\VAR{refund_mod} \VAR{beneficiary_iban}\\
+\VAR{refund_method} \VAR{beneficiary_iban}\\
 
 \newpage
 

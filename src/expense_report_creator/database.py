@@ -1,32 +1,25 @@
+"""Gestion de la persistance des données.
+
+Ce module gère l'initialisation des bases de données SQLite pour l'administrateur
+et les clubs individuels, ainsi que la fourniture des connexions.
+"""
+
 import os
-import hashlib
 import sqlite3
 from typing import Generator
 
-
-DB_DIR = os.path.join(os.getcwd(), "databases")
-LOGO_DIR = os.path.join(DB_DIR, "logos")
-
-
-def hash_password(password: str) -> str:
-    """Hache un mot de passe en utilisant PBKDF2-HMAC-SHA256 (standard Python, aucun paquet externe)."""
-    salt = os.urandom(16)
-    key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100000)
-    return f"{salt.hex()}:{key.hex()}"
-
-
-def verify_password(password: str, hashed: str) -> bool:
-    try:
-        salt_hex, key_hex = hashed.split(":")
-        salt = bytes.fromhex(salt_hex)
-        key = bytes.fromhex(key_hex)
-        new_key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100000)
-        return key == new_key
-    except Exception:
-        return False;
+from .config import DB_DIR, LOGO_DIR
 
 
 def init_databases() -> None:
+    """Initialise les dossiers et tables des bases de données et des logos.
+
+    Crée les bases de données d'administration et configure le compte admin
+    par défaut s'il n'existe pas encore.
+    """
+    # Import local pour éviter les imports circulaires
+    from .auth import hash_password
+
     if not os.path.exists(DB_DIR):
         os.makedirs(DB_DIR)
 
@@ -36,13 +29,17 @@ def init_databases() -> None:
     admin_db_path = os.path.join(DB_DIR, "admin.db")
     conn = sqlite3.connect(admin_db_path)
     cursor = conn.cursor()
-    cursor.execute("""
+
+    # Table des clubs gérée par l'administrateur
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS clubs (
-            club_id TEXT PRIMARY KEY, 
-            nom TEXT NOT NULL, 
+            club_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
             hashed_password TEXT NOT NULL
         )
-    """)
+        """
+    )
     conn.commit()
 
     cursor.execute("SELECT COUNT(*) FROM clubs")
@@ -50,16 +47,19 @@ def init_databases() -> None:
         hashed_password = hash_password("admin123")
         admin = ("admin", "AEN7", hashed_password)
         cursor.execute(
-            "INSERT INTO clubs (club_id, nom, hashed_password) VALUES (?, ?, ?)",
-            admin
+            "INSERT INTO clubs (club_id, name, hashed_password) VALUES (?, ?, ?)",
+            admin,
         )
     conn.commit()
     conn.close()
 
 
-
-
 def get_admin_db() -> Generator[sqlite3.Connection, None, None]:
+    """Fournit une connexion à la base de données administrateur pour FastAPI.
+
+    Yields:
+        sqlite3.Connection: Une connexion SQLite active configurée avec Row.
+    """
     if not os.path.exists(DB_DIR):
         os.makedirs(DB_DIR)
 
@@ -73,12 +73,26 @@ def get_admin_db() -> Generator[sqlite3.Connection, None, None]:
 
 
 def get_club_db(club_id: str) -> sqlite3.Connection:
+    """Renvoie une connexion à la base de données du club spécifié.
+
+    Initialise la structure des tables du club si la base de données vient d'être
+    créée. Empêche l'accès direct aux bases système.
+
+    Args:
+        club_id: L'identifiant unique du club.
+
+    Returns:
+        sqlite3.Connection: Connexion SQLite configurée pour ce club.
+
+    Raises:
+        ValueError: Si le club_id est invalide ou s'il s'agit d'un identifiant
+            réservé.
+    """
     parts_club_id = club_id.split("_")
     for part in parts_club_id:
         if not part.isalnum():
             raise ValueError("club_id invalide")
 
-    # On empêche qu'un club "normal" soit créer et accède à admin_club.db
     if club_id == "admin_club":
         raise ValueError("club_id invalide")
 
@@ -95,26 +109,31 @@ def get_club_db(club_id: str) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    # Configuration des tables spécifiques au club
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY, 
+            key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         )
-    """)
+        """
+    )
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS beneficiaires (
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS beneficiaries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            prenom TEXT NOT NULL,
-            nom TEXT NOT NULL,
-            adresse TEXT NOT NULL,
-            postal TEXT NOT NULL,
-            ville TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            address TEXT NOT NULL,
+            postal_code TEXT NOT NULL,
+            city TEXT NOT NULL,
             email TEXT NOT NULL,
-            tel TEXT NOT NULL,
+            phone TEXT NOT NULL,
             iban TEXT NOT NULL
         )
-    """)
+        """
+    )
 
     conn.commit()
     return conn
