@@ -46,7 +46,8 @@ import {
 
 import {
     handleResetPassword,
-    handleDeleteClub
+    handleDeleteClub,
+    modalNewPassword
 } from './admin.js';
 
 import {
@@ -324,10 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Nom du club</label>
                         <input type="text" id="new-club-nom" class="apple-input bg-gray-50/50" placeholder="ex: Club Photo N7" required>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 ml-1 mb-1">Mot de passe temporaire</label>
-                        <input type="password" id="new-club-pass" class="apple-input bg-gray-50/50" placeholder="••••••••" required>
-                    </div>
                     <div class="flex gap-3 justify-end pt-4">
                         <button type="button" id="modal-cancel-btn" class="apple-btn-secondary">Annuler</button>
                         <button type="submit" class="apple-btn-primary">Créer</button>
@@ -341,11 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formEvent.preventDefault();
             const clubId = document.getElementById('new-club-id').value.toLowerCase().trim();
             const name = document.getElementById('new-club-nom').value.trim();
-            const password = document.getElementById('new-club-pass').value;
             try {
-                await createClub({ club_id: clubId, name, password });
+                const responseData = await createClub({ club_id: clubId, name });
                 showToast(`Club '${name}' créé avec succès`, 'success');
-                closeModal();
+                modalNewPassword(name, responseData.password);
                 await refreshClubs();
             } catch (error) {
                 showToast(`Échec : ${error.message}`, 'error');

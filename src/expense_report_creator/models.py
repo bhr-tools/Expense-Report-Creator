@@ -44,7 +44,6 @@ class ClubCreateRequest(BaseModel):
 
     club_id: str
     name: str
-    password: str
 
 
 class ResetPasswordRequest(BaseModel):

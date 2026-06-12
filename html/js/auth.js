@@ -20,7 +20,7 @@ export function setupSessionUI(clubId, clubName, navigateToView) {
 
     if (clubId === 'admin') {
         document.getElementById('nav-admin-btn').classList.remove('hidden');
-        document.getElementById('nav-admin-btn').classList.add('flex');
+        document.getElementById('change-password-btn').classList.remove('hidden');
 
         document.getElementById('nav-logo').className = 'w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-md';
         document.getElementById('nav-title').textContent = 'Admin AE';
@@ -28,7 +28,7 @@ export function setupSessionUI(clubId, clubName, navigateToView) {
         navigateToView('view-admin');
     } else {
         document.getElementById('nav-admin-btn').classList.add('hidden');
-        document.getElementById('nav-admin-btn').classList.remove('flex');
+        document.getElementById('change-password-btn').classList.add('hidden');
 
         document.getElementById('nav-logo').className = 'w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md';
         document.getElementById('nav-title').textContent = `${clubName}`;

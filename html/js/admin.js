@@ -6,6 +6,25 @@
 import { resetPassword, deleteClub } from './api.js';
 import { openModal, closeModal, showToast } from './ui.js';
 
+
+export function modalNewPassword(clubName, newPass) {
+    const copyContent = `
+        <div class="text-center">
+            <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="ph ph-check-circle text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Nouveau mot de passe</h3>
+            <p class="text-sm text-gray-500 mb-4">Voici le nouveau mot de passe pour <strong>${clubName}</strong>. Copiez-le soigneusement et transmettez-le au club.</p>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                <span class="font-mono text-2xl font-bold text-gray-800 tracking-wider">${newPass}</span>
+            </div>
+            <button id="modal-close-btn" class="apple-btn-primary w-full">Fermer</button>
+        </div>
+    `;
+    openModal(copyContent);
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+}
+
 /**
  * Déclenche le flux de réinitialisation de mot de passe d'un club après confirmation.
  * Affiche ensuite le nouveau mot de passe généré dans une boîte de dialogue.
@@ -33,22 +52,8 @@ export async function handleResetPassword(clubId, clubName) {
     document.getElementById('modal-confirm-btn').addEventListener('click', async () => {
         try {
             const resData = await resetPassword(clubId);
-            const newPass = resData.new_password;
-            const copyContent = `
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="ph ph-check-circle text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Nouveau mot de passe</h3>
-                    <p class="text-sm text-gray-500 mb-4">Voici le nouveau mot de passe pour <strong>${clubName}</strong>. Copiez-le soigneusement et transmettez-le au club.</p>
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
-                        <span class="font-mono text-2xl font-bold text-gray-800 tracking-wider">${newPass}</span>
-                    </div>
-                    <button id="modal-close-btn" class="apple-btn-primary w-full">Fermer</button>
-                </div>
-            `;
-            openModal(copyContent);
-            document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+            const newPass = resData.password;
+            modalNewPassword(clubName, newPass);
         } catch (error) {
             showToast(`Échec : ${error.message}`, 'error');
         }

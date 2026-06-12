@@ -11,10 +11,10 @@ from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..auth import get_current_club_id, hash_password
+from ..auth import get_current_club_id, hash_password, verify_password
 from ..config import DB_DIR
 from ..database import get_admin_db, get_club_db
-from ..models import ClubCreateRequest, ResetPasswordRequest
+from ..models import ClubCreateRequest, ResetPasswordRequest, ChangePasswordRequest
 
 router = APIRouter(prefix="/api/admin/clubs", tags=["admin"])
 
@@ -72,18 +72,25 @@ def create_club(
     if current_club_id != "admin":
         raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
 
-    # L'identifiant doit être alphanumérique ou contenir un tiret bas uniquement
-    if not data.club_id.isalnum() and "_" not in data.club_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Identifiant de club invalide (alphanumérique uniquement)",
-        )
+    # L'identifiant doit être composé de morceaux alphanumériques séparés par des tirets bas
+    parts = data.club_id.split("_")
+    for part in parts:
+        if not part.isalnum():
+            raise HTTPException(
+                status_code=400,
+                detail="Identifiant de club invalide (alphanumérique et tirets bas uniquement)",
+            )
+
+    import secrets
+
+    alphabet = string.ascii_letters + string.digits
+    new_password = "".join(secrets.choice(alphabet) for _ in range(8))
 
     cursor = db.cursor()
     try:
         cursor.execute(
             "INSERT INTO clubs (club_id, name, hashed_password) VALUES (?, ?, ?)",
-            (data.club_id, data.name, hash_password(data.password)),
+            (data.club_id, data.name, hash_password(new_password)),
         )
         db.commit()
     except sqlite3.IntegrityError:
@@ -101,7 +108,7 @@ def create_club(
             detail=f"Erreur d'initialisation de la DB du club : {str(e)}",
         )
 
-    return {"status": "ok", "message": f"Club '{data.name}' créé avec succès"}
+    return {"status": "ok", "message": f"Club '{data.name}' créé avec succès", "password": new_password}
 
 
 @router.post("/reset-password")
@@ -140,7 +147,7 @@ def reset_password(
         raise HTTPException(status_code=404, detail="Club non trouvé")
     db.commit()
 
-    return {"new_password": new_password}
+    return {"password": new_password}
 
 
 @router.delete("/{club_id}")
@@ -184,4 +191,44 @@ def delete_club(
     except Exception as e:
         print(f"Erreur lors de la suppression physique de la DB {club_id}.db : {e}")
 
+    return {"status": "ok"}
+
+@router.post("/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    current_club_id: str = Depends(get_current_club_id),
+    db: sqlite3.Connection = Depends(get_admin_db),
+) -> Dict[str, str]:
+    """Permet au club connecté de modifier son mot de passe.
+
+    Cette méthode est également valide pour le compte 'admin'.
+
+    Args:
+        data: Requête contenant l'ancien et le nouveau mot de passe.
+        current_club_id: L'identifiant unique du club connecté.
+        db: Connexion à la base de données d'administration.
+
+    Returns:
+        Dict[str, str]: Le statut de l'opération.
+
+    Raises:
+        HTTPException: Si l'ancien mot de passe fourni est invalide.
+    """
+    if current_club_id != "admin":
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
+
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT hashed_password FROM clubs WHERE club_id = ?",
+        (current_club_id,),
+    )
+    row = cursor.fetchone()
+    if not row or not verify_password(data.old_password, row["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Ancien mot de passe incorrect")
+
+    cursor.execute(
+        "UPDATE clubs SET hashed_password = ? WHERE club_id = ?",
+        (hash_password(data.new_password), current_club_id),
+    )
+    db.commit()
     return {"status": "ok"}

@@ -200,7 +200,7 @@ export async function deleteClub(clubId) {
  * @returns {Promise<Object>} Statut de l'opération.
  */
 export async function changePassword(oldPassword, newPassword) {
-    const response = await fetch(`${BASE_URL}/api/change-password`, {
+    const response = await fetch(`${BASE_URL}/api/admin/clubs/change-password`, {
         method: 'POST',
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })

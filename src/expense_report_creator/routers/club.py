@@ -9,11 +9,10 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..auth import get_current_club_id, hash_password, verify_password
+from ..auth import get_current_club_id
 from ..database import get_admin_db, get_club_db
 from ..models import (
     BeneficiaryRequest,
-    ChangePasswordRequest,
     SettingsUpdateRequest,
 )
 
@@ -165,41 +164,3 @@ def delete_beneficiary(
         return {"status": "ok"}
     finally:
         conn.close()
-
-
-@router.post("/api/change-password")
-def change_password(
-    data: ChangePasswordRequest,
-    current_club_id: str = Depends(get_current_club_id),
-    db: sqlite3.Connection = Depends(get_admin_db),
-) -> Dict[str, str]:
-    """Permet au club connecté de modifier son mot de passe.
-
-    Cette méthode est également valide pour le compte 'admin'.
-
-    Args:
-        data: Requête contenant l'ancien et le nouveau mot de passe.
-        current_club_id: L'identifiant unique du club connecté.
-        db: Connexion à la base de données d'administration.
-
-    Returns:
-        Dict[str, str]: Le statut de l'opération.
-
-    Raises:
-        HTTPException: Si l'ancien mot de passe fourni est invalide.
-    """
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT hashed_password FROM clubs WHERE club_id = ?",
-        (current_club_id,),
-    )
-    row = cursor.fetchone()
-    if not row or not verify_password(data.old_password, row["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Ancien mot de passe incorrect")
-
-    cursor.execute(
-        "UPDATE clubs SET hashed_password = ? WHERE club_id = ?",
-        (hash_password(data.new_password), current_club_id),
-    )
-    db.commit()
-    return {"status": "ok"}
