@@ -39,7 +39,7 @@
     \end{center}
     \hrulefill
 
-    \vspace{0.5cm}
+    
 
     % Afficher les informations du bénéficiaire
     \begin{flushright}
@@ -71,8 +71,8 @@
 % c = centré (conventionnel pour la quantité)
 \begin{tabularx}{\linewidth}{|c|X|r|r|}
     \hline
-    \textbf{\textcolor[RGB]{255,87,51}{Qté}} &
-    \textbf{\textcolor[RGB]{255,87,51}{Référence / Description}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Quantité}} &
+    \textbf{\textcolor[RGB]{255,87,51}{Libellé}} &
     \textbf{\textcolor[RGB]{255,87,51}{Prix Unitaire}} &
     \textbf{\textcolor[RGB]{255,87,51}{Prix Total}} \\
     \hline
@@ -102,10 +102,12 @@
 \end{tabularx}
 \end{center}
 
+\textbf{Pièces jointes :} Justificatifs
+
 \vspace{0.5cm}
 
-
-\textbf{Pièces jointes :} Justificatifs
+Demande de remboursement :
+\VAR{refund_method} \VAR{beneficiary_iban}\\
 
 
 \vspace{1cm}
@@ -132,11 +134,6 @@
     \includegraphics[width=5cm, keepaspectratio]{\VAR{signature_path}}
     \BLOCK{ endif }
 \end{minipage}
-
-\vspace{1cm}
-
-\underline{Demande de remboursement :}
-\VAR{refund_method} \VAR{beneficiary_iban}\\
 
 \newpage
 

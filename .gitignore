@@ -1,7 +1,3 @@
-# Dossiers de sortie
-SORTIE_PDF/
-SORTIE_LATEX/
-
 # Dossiers et fichiers généraux
 .venv/
 .DS_Store
@@ -22,3 +18,6 @@ temp.tex
 
 # Fichiers générés par OnlyOffice
 .~lock.data.xlsx#
+
+# Bases de données
+databases/

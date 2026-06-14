@@ -8,7 +8,8 @@ import {
     saveSettings,
     fetchBeneficiaries,
     fetchClubs,
-    createClub
+    createClub,
+    uploadLogo
 } from './api.js';
 
 import {
@@ -47,7 +48,8 @@ import {
 import {
     handleResetPassword,
     handleDeleteClub,
-    modalNewPassword
+    modalNewPassword,
+    handleUploadLogo
 } from './admin.js';
 
 import {
@@ -83,7 +85,7 @@ async function refreshBeneficiaries() {
 async function refreshClubs() {
     try {
         state.clubs = await fetchClubs();
-        renderClubs(state.clubs, handleResetPassword, (clubId, clubName) => {
+        renderClubs(state.clubs, handleUploadLogo, handleResetPassword, (clubId, clubName) => {
             handleDeleteClub(clubId, clubName, refreshClubs);
         });
     } catch (err) {
@@ -308,6 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Téléchargement des justificatifs/notes de frais
     document.getElementById('download-pdf-btn').addEventListener('click', () => handleGenerateNDF('pdf'));
     document.getElementById('download-latex-btn').addEventListener('click', () => handleGenerateNDF('latex'));
+
+
+    document.getElementById('change-logo-btn').addEventListener('click', () => document.getElementById('change-logo-admin').click());
+    document.getElementById('change-logo-admin').addEventListener('change', (e) => {
+        handleUploadLogo("admin", "AEN7", e.target.files[0]);
+    })
 
     // Modale de création de club (Panel d'administration)
     document.getElementById('create-club-btn').addEventListener('click', () => {

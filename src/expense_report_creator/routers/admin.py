@@ -9,10 +9,10 @@ import sqlite3
 import string
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from ..auth import get_current_club_id, hash_password, verify_password
-from ..config import DB_DIR
+from ..config import DB_DIR, LOGO_DIR
 from ..database import get_admin_db, get_club_db
 from ..models import ClubCreateRequest, ResetPasswordRequest, ChangePasswordRequest
 
@@ -44,7 +44,7 @@ def list_clubs(
     rows = cursor.fetchall()
 
     return [
-        {"id": row["club_id"], "name": row["name"], "lastLogin": "Actif"}
+        {"id": row["club_id"], "name": row["name"]}
         for row in rows
     ]
 
@@ -231,4 +231,34 @@ def change_password(
         (hash_password(data.new_password), current_club_id),
     )
     db.commit()
+    return {"status": "ok"}
+
+
+@router.post("/{club_id}/logo")
+def upload_logo(
+    club_id: str,
+    logo: UploadFile,
+    current_club_id: str = Depends(get_current_club_id),
+    db: str = Depends(get_admin_db)
+):
+    if current_club_id != "admin":
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
+    
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT club_id FROM clubs WHERE club_id = ?",
+        (club_id,)
+    )
+
+    row = cursor.fetchone()
+    if row is None:
+        raise HTTPException(status_code=400, detail="Ce club n'existe pas")
+    
+    logo_path = os.path.join(LOGO_DIR, f"{club_id}.png")
+    logo_content = logo.file.read()
+
+    with open(logo_path, 'wb') as file:
+        file.write(logo_content)
+
     return {"status": "ok"}

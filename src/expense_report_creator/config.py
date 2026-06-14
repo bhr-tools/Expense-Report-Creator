@@ -15,5 +15,6 @@ ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
 # Configuration de la sécurité JWT
 # Une clé secrète aléatoire est générée à chaque démarrage de l'application
-SECRET_KEY = secrets.token_hex(32)
+# SECRET_KEY = secrets.token_hex(32)
+SECRET_KEY = "test"
 ALGORITHM = "HS256"

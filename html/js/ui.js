@@ -116,7 +116,7 @@ export function closeModal() {
  * @param {Function} onResetPassword Callback au clic sur le bouton de réinitialisation.
  * @param {Function} onDeleteClub Callback au clic sur le bouton de suppression.
  */
-export function renderClubs(clubs, onResetPassword, onDeleteClub) {
+export function renderClubs(clubs, onUploadLogo, onResetPassword, onDeleteClub) {
     const tbody = document.getElementById('admin-clubs-list');
     tbody.innerHTML = '';
 
@@ -142,8 +142,11 @@ export function renderClubs(clubs, onResetPassword, onDeleteClub) {
                 </div>
             </td>
             <td class="p-4 text-sm text-gray-500 font-mono">${club.id}</td>
-            <td class="p-4 text-sm text-gray-500">${club.lastLogin || 'Inactif'}</td>
             <td class="p-4 text-right space-x-2">
+                <input class="hidden modify-logo" type="file" accept="image/png">
+                <button class="modify-logo-btn text-green-500 hover:bg-green-50 p-2 rounded-lg transition" title="Modifier le logo">
+                    <i class="ph ph-image text-lg"></i>
+                </button>
                 <button class="reset-pass-btn text-orange-500 hover:bg-orange-50 p-2 rounded-lg transition" title="Régénérer MDP">
                     <i class="ph ph-key text-lg"></i>
                 </button>
@@ -155,6 +158,10 @@ export function renderClubs(clubs, onResetPassword, onDeleteClub) {
 
         tr.querySelector('.reset-pass-btn').addEventListener('click', () => onResetPassword(club.id, club.name));
         tr.querySelector('.delete-club-btn').addEventListener('click', () => onDeleteClub(club.id, club.name));
+        tr.querySelector('.modify-logo-btn').addEventListener('click', () => tr.querySelector('.modify-logo').click());
+        tr.querySelector('.modify-logo').addEventListener('change', (e) => {
+            onUploadLogo(club.id, club.name, e.target.files[0]);
+        });
         tbody.appendChild(tr);
     });
 }

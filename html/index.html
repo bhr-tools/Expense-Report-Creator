@@ -57,10 +57,6 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button id="change-password-btn"
-                class="hidden text-sm text-gray-500 hover:bg-gray-100 px-4 py-2 rounded-full transition flex items-center gap-2">
-                <i class="ph ph-key"></i> Mot de passe
-            </button>
             <button id="logout-btn"
                 class="text-sm text-red-500 hover:bg-red-50 px-4 py-2 rounded-full transition flex items-center gap-2">
                 <i class="ph ph-sign-out"></i> Déconnexion
@@ -320,9 +316,20 @@
         <div id="view-admin" class="view-section w-full max-w-6xl self-start mt-8 px-6">
             <div class="flex justify-between items-center mb-8">
                 <h1 class="text-3xl font-bold">Tableau de bord AE</h1>
-                <button id="create-club-btn" class="apple-btn-primary flex items-center gap-2 shadow-sm">
-                    <i class="ph ph-plus-circle text-xl"></i> Nouveau Club
-                </button>
+
+                <div class="flex justify-end space-x-4">
+                    <input id="change-logo-admin" type="file" accept="image/png" class="hidden">                    
+                    <button id="change-password-btn"
+                        class="apple-btn-secondary flex items-center gap-2 shadow-sm">
+                        Modifier le mot de passe
+                    </button>
+                    <button id="change-logo-btn" class="apple-btn-secondary flex items-center gap-2 shadow-sm">
+                        Modifier le logo
+                    </button>
+                    <button id="create-club-btn" class="apple-btn-primary flex items-center gap-2 shadow-sm">
+                        <i class="ph ph-plus-circle text-xl"></i> Nouveau Club
+                    </button>
+                </div>
             </div>
 
             <div class="glass apple-shadow rounded-3xl overflow-hidden">
@@ -331,7 +338,6 @@
                         <tr class="bg-gray-50/50 border-b border-gray-200">
                             <th class="p-4 text-sm font-semibold text-gray-500">Club</th>
                             <th class="p-4 text-sm font-semibold text-gray-500">Identifiant</th>
-                            <th class="p-4 text-sm font-semibold text-gray-500">Dernière connexion</th>
                             <th class="p-4 text-sm font-semibold text-gray-500 text-right">Actions</th>
                         </tr>
                     </thead>

@@ -224,3 +224,13 @@ export async function generateExpenseReport(formData) {
     const validResponse = await handleResponse(response);
     return validResponse.blob();
 }
+
+export async function uploadLogo(clubId, formData) {
+    const response = await fetch(`${BASE_URL}/api/admin/clubs/${clubId}/logo`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: formData
+    });
+    const validResponse = await handleResponse(response);
+    return validResponse.json();
+}

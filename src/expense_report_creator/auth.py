@@ -7,7 +7,6 @@ jetons JWT (création et validation) pour sécuriser les routes de l'API.
 import hashlib
 import os
 from datetime import datetime, timedelta
-from typing import Optional
 
 import jwt
 from fastapi import Depends, HTTPException
@@ -53,7 +52,7 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Génère un token JWT signé pour un club.
 
     Args:

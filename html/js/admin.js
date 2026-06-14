@@ -3,7 +3,7 @@
  * @description Opérations d'administration : réinitialisation de mot de passe et suppression de club.
  */
 
-import { resetPassword, deleteClub } from './api.js';
+import { resetPassword, deleteClub, uploadLogo } from './api.js';
 import { openModal, closeModal, showToast } from './ui.js';
 
 
@@ -96,4 +96,21 @@ export async function handleDeleteClub(clubId, clubName, onUpdate) {
             showToast(`Échec : ${error.message}`, 'error');
         }
     });
+}
+
+/**
+ * Upload le nouveau logo d'un club.
+ *
+ * @param {File} logo
+ */
+export async function handleUploadLogo(clubId, clubName, logo) {
+    const formData = new FormData();
+    formData.append('club_id', clubId)
+    formData.append('logo', logo)
+    try {
+        await uploadLogo(clubId, formData)
+        showToast(`Logo de ${clubName} modifié avec succès`)
+    } catch (error) {
+        showToast(`Échec : ${error.message}`, 'error');
+    }
 }

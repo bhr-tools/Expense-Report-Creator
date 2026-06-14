@@ -5,13 +5,14 @@ et de compiler le document final (PDF ou code source LaTeX).
 """
 
 import json
-from typing import List, Optional
+import os
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import ValidationError
 
 from ..auth import get_current_club_id
+from ..config import LOGO_DIR
 from ..generator import compile_ndf_document
 from ..models import ExpenseReportData
 
@@ -22,9 +23,8 @@ router = APIRouter(prefix="/api/expense-reports", tags=["expense-reports"])
 async def generate_expense_report(
     data_json: str = Form(...),
     format: str = Form("pdf"),  # "pdf" ou "latex"
-    signature: Optional[UploadFile] = File(None),
-    logo: Optional[UploadFile] = File(None),
-    receipts: List[UploadFile] = File(default=[]),
+    signature: UploadFile | None = File(None),
+    receipts: list[UploadFile] = File(default=[]),
     current_club_id: str = Depends(get_current_club_id),
 ) -> Response:
     """Valide les données et compile la note de frais avec les justificatifs.
@@ -60,7 +60,13 @@ async def generate_expense_report(
     signature_content = (
         await signature.read() if signature and signature.filename else None
     )
-    logo_content = await logo.read() if logo and logo.filename else None
+
+    logo_path = os.path.join(LOGO_DIR, f"{current_club_id}.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(LOGO_DIR, "admin.png")
+
+    with open(logo_path, 'br') as file:
+        logo_content = file.read()
 
     receipts_files = []
     for r in receipts:

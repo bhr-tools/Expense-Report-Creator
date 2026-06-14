@@ -8,7 +8,6 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime
-from typing import List, Optional
 
 import jinja2
 from PIL import Image, ImageOps
@@ -33,7 +32,7 @@ def tex_safe(value: str) -> str:
 
 def generate_latex(
     data: ExpenseReportData,
-    receipt_file_paths: List[str],
+    receipt_file_paths: list[str],
     signature_path: str,
     logo_path: str,
 ) -> str:
@@ -108,9 +107,9 @@ def generate_latex(
 def compile_ndf_document(
     data: ExpenseReportData,
     format_type: str,
-    signature_content: Optional[bytes] = None,
-    logo_content: Optional[bytes] = None,
-    receipts: List[tuple[str, bytes]] = [],
+    signature_content: bytes | None = None,
+    logo_content: bytes | None = None,
+    receipts: list[tuple[str, bytes]] = [],
 ) -> tuple[bytes, str]:
     """Compile la note de frais et fusionne les pièces jointes si nécessaire.
 
