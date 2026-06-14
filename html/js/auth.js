@@ -6,6 +6,8 @@
 import { login, fetchSettings, changePassword } from './api.js';
 import { showView, showToast, openModal, closeModal } from './ui.js';
 import { state } from './state.js';
+import { resetExpensesTable } from './expenses.js';
+import { updateBeneficiarySelect, updateSelectedBeneficiary } from './ui.js';
 
 /**
  * Configure les éléments graphiques du menu et de la barre de navigation selon la session active.
@@ -41,16 +43,16 @@ export function setupSessionUI(clubId, clubName, navigateToView) {
  * @param {Function} navigateToView Callback de navigation.
  */
 export function handleLogout(navigateToView) {
-    state.currentUser = null;
+    document.getElementById('settings-form')?.reset();
+    document.getElementById('login-form')?.reset();
+    document.getElementById('form-add-beneficiary')?.reset();
+    document.getElementById('expense-report-number').value = '';
+
     localStorage.removeItem('token');
     localStorage.removeItem('club_id');
     localStorage.removeItem('club_nom');
 
-    document.getElementById('navbar').classList.add('hidden');
-    document.getElementById('login-id').value = '';
-    document.getElementById('login-pass').value = '';
-    showToast('Déconnexion réussie', 'info');
-    navigateToView('view-login');
+    window.location.reload();
 }
 
 /**

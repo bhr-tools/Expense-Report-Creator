@@ -78,6 +78,12 @@ export function addNewExpenseRow(qty = 1, label = '', price = 0) {
     recalculateTotals();
 }
 
+
+export function resetExpensesTable() {
+    const tbody = document.getElementById('expenses-body');
+    tbody.innerHTML = '';
+}
+
 /**
  * Intercepte et traite le collage de lignes de tableau (type Excel) directement dans la vue.
  *
