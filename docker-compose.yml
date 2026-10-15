@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: expense-report-creator:latest
+    container_name: expense_report_creator
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./databases:/app/databases
+    restart: unless-stopped

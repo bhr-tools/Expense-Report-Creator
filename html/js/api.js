@@ -3,7 +3,7 @@
  * @description Fonctions d'appel à l'API de gestion des notes de frais.
  */
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = '';
 
 /**
  * Construit les en-têtes HTTP requis pour les requêtes de l'API.

@@ -6,6 +6,7 @@ rattache les différents routeurs d'API, et initialise les bases de données.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .database import init_databases
 from .routers.admin import router as admin_router
@@ -36,6 +37,8 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(club_router)
 app.include_router(expense_report_router)
+
+app.mount("/", StaticFiles(directory="html", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
