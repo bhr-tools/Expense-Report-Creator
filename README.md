@@ -1,70 +1,92 @@
-# Expense Report Creator
+# Expense Report Creator (`expense-report-creator`)
 
-Générateur de notes de frais pour automatiser le travail des trésoriers au sein d'une association.
+Automated expense report compiler generating formalized, audit-ready PDF documents from spreadsheet ledger data, receipt images, and LaTeX templates.
 
-## À propos
+> **Status:** Archived. Core CLI engine is functional (`v1.0.0`–`v1.2.0`). Exploration of a self-hosted web service was deprecated in favor of a zero-maintenance Google Workspace (Apps Script) workflow.
 
-Ce projet est un script Python conçu pour facilement créer des notes de frais à partir d'un template adapté pour les associations. Il permet d'exporter des données d'un tableau xlsx en une note de frais PDF. Le tableau xlsx fourni permet d'enregistrer facilement les informations du trésorier et de l'association, ainsi que d'enregistrer les différents bénéficiaires pour des futurs remboursements. Le fichier intermédiaire LaTeX est aussi exporté pour modifications manuelles si besoin.
+## 1. Problem & Context
 
-Le script est entièrement documenté en convention Google. Étant adapté pour un public français, le programme est documenté dans cette langue. Cependant, il est codé en anglais pour être accessible au plus grand nombre. Je me suis assuré du respect de la PEP 8 via l'utilisation d'une automatisation avec pre-commit des outils suivants :
-- isort
-- black
-- flake8
+Managing student club treasuries (e.g., student associations and clubs like Net7, Photo7 at ENSEEIHT) involves recurring operational overhead:
 
-Le programme fonctionne sur Linux et MacOS.
+- Aggregating receipts and expense proofs across multiple contributors.
+    
+- Manual data re-entry into administrative PDF/paper forms.
+    
+- TeX environment dependency issues across contributors' machines.
+    
 
-## Installation
-Le programme ne nécessite pas d'être installé (il fonctionne depuis github), il faut seulement installer le **gestionnaire de paquets [Nix](https://nixos.org/download/)**.
+This repository provides an automated, reproducible compilation pipeline that converts a standardized Excel expense template into a formalized PDF statement with embedded signatures and itemized receipts.
 
-## Utilisation
-1. Initialisez le fichier "TEMPLATE" (que vous pourrez renommer) avec la commande suivante. Vous pouvez vous ensuite modifier ce qu'il contient comme détaillé par la suite.
+## 2. Technical Architecture (CLI Engine — ~430 LoC)
 
-```bash
-nix run github:jarvis-ed1th/expense-report-creator -- init
+The system operates as a zero-dependency CLI pipeline managed by Nix:
+
+```
+TEMPLATE/
+ ├── data.xlsx          (Expense entries & metadata)
+ ├── justificatifs/     (Receipt images / proofs)
+ ├── logo.png           (Club logo)
+ └── signature.png      (Treasurer / member signature)
+          │
+          ▼
+   [ src/expense-report-creator/main.py ]  <── Parses Excel data (openpyxl)
+          │
+          ▼
+   [ assets/export-report-template.tex ]   <── Injects data & formats multi-page tables
+          │
+          ▼ (pdflatex / xelatex via Nix)
+     output.pdf         (Audit-compliant expense report)
 ```
 
-2. Pour générer la note de frais, placez-vous dans le dossier pour lancer la commande suivante.
+### Components
 
-``` bash
-nix run github:jarvis-ed1th/expense-report-creator
+- **Pipeline Orchestrator (`main.py` — ~180 LoC):** Ingests structured ledger data from `data.xlsx`, sanitizes strings for LaTeX compatibility, dynamically pairs transactions with their corresponding receipt files, and renders the LaTeX source.
+    
+- **Document Template (`export-report-template.tex` — ~115 LoC):** Parametric LaTeX template featuring dynamic layout adaptation for multi-page tables, club branding header, and receipt image appending.
+    
+- **Hermetic Toolchain (`flake.nix` — ~50 LoC):** Bundles Python 3, required parsing libraries, and a complete TeX Live environment with necessary CTAN packages. Guarantees deterministic PDF compilation on any Linux/macOS machine with zero manual installation.
+    
+
+## 3. Project Evolution & History
+
+- **Phase 1: CLI Pipeline (`v1.0.0` – `v1.2.0` / commit `864aa7f`):**
+    
+    - Fully functional, deterministic local pipeline.
+        
+    - Used for generating formatted expense reports directly from terminal workflows.
+        
+- **Phase 2: Full-Stack Web Exploration (commit `876cadb` onward):**
+    
+    - Attempted centralization to support multi-club access via a web interface (`expense_report_creator/routers/`, SQLite databases per club in `databases/`, and Docker deployment).
+        
+    - Objective: Allow non-technical club officers to upload receipts through a web form without touching a CLI.
+        
+
+## 4. Post-Mortem & Strategic Pivot
+
+During the Phase 2 expansion, an engineering trade-off analysis led to deprecating this codebase:
+
+1. **Disproportionate Operational Overhead:** Running and securing a self-hosted full-stack web service (FastAPI backend, SQLite databases, authentication, Docker host) required ongoing maintenance for a batch process that runs only a few times per semester.
+    
+2. **The Cloud-Native Alternative:** The entire ingestion, validation, and PDF export logic was subsequently re-implemented in **Google Apps Script** bound directly to Google Sheets and Google Drive.
+    
+3. **Outcome:** The Google Workspace script fulfilled 100% of the non-technical user requirements, leveraged native club Google Drive permissions, and removed the need for any hosting infrastructure.
+    
+
+## 5. Quickstart (CLI Engine)
+
+### Requirements
+
+- [Nix package manager](https://nixos.org/ "null") with Flakes enabled.
+    
+
+### Compilation
+
 ```
+# 1. Enter the isolated environment (Python + LaTeX included)
+nix develop
 
-3. (Optionnel) Si vous ne voulez pas vous placer dans le dossier, vous pouvez le transmettre en argument :
-
-``` bash
-nix run github:jarvis-ed1th/expense-report-creator -- /chemin/du/fichier
+# 2. Populate TEMPLATE/ with your data.xlsx and receipt images
+# 3. Generate the report
+python src/expense-report-creator/main.py
 ```
-
-4. Vos notes de frais sont proprement générées en PDF et en LATEX dans le cas où vous souhaiteriez les modifier par la suite.
-
-### Documents et justificatifs
-Dans le dossier, le trésorier pourra mettre sa signature et le logo de son association. Le dossier "justificatifs" permet de mettre toutes les preuves de paiement et autres pièces jointes qui seront ajoutées à la note de frais.
-
-<div align="center">
-	<img src="assets/src_readme/A_MODIFIER.png" alt="alt-text" width="200px"/>
-</div>
-
-### Modification de data.xlsx
-Pour la feuille "Tableau de bord", toutes les données peuvent être modifiées pour correspondre à la situation de chacun. Il suffira ensuite de modifier pour chaque note de frais :
-
-- Les lignes de frais à rembourser,
-- Les cellules en couleur rosée.
-
-Les bénéficiaires sont à enregistrer dans la feuille "Bénéficiaires".
-
-<div align="center">
-	<img src="assets/src_readme/data.png" alt="alt-text" width="600px"/>
-</div>
-
-### Génération de la note de frais
-
-Pour générer la note de frais, il suffit alors de lancer la commande d'export correspondant à son système d'exploitation, exactement comme lors de la [seconde étape de l'utilisation.](#Utilisation)
-
-### Exemple de note de frais
-<div align="center">
-	<img src="assets/src_readme/PDF.png" alt="alt-text" width="400px"/>
-</div>
-
-## Licence
-
-Distribué sous la licence MIT. Voir le fichier `LICENSE` pour plus d'informations.
